@@ -215,9 +215,6 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 
 def run():
 
-    print("Nothing happening so far. Exiting.")
-    return
-
     tests_only = os.getenv("TESTS_ONLY", False)
     if tests_only:
         print("TESTS_ONLY environment variable set to True, skipping run.")
@@ -233,10 +230,13 @@ def run():
     learning_rate = 0.0005
 
     # check if Kitti dataset is available
-    tests.test_for_kitti_dataset(data_dir)
+    #tests.test_for_kitti_dataset(data_dir)
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
+
+    print("Nothing happening so far. Exiting.")
+    return
 
     # TODO OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.
     # You'll need a GPU with at least 10 teraFLOPS to train on.
