@@ -1,7 +1,7 @@
 # get dependencies
 pip install tqdm
 pip install moviepy
-sudo apt-get install ffmpeg
+sudo apt-get install -y ffmpeg
 
 # get project
 git clone https://github.com/mwolfram/CarND-Traffic-Light-Detection.git
