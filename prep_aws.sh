@@ -5,7 +5,7 @@ sudo apt-get install ffmpeg
 
 # get project
 git clone https://github.com/mwolfram/CarND-Traffic-Light-Detection.git
-cd CarND-Semantic-Segmentation
+cd CarND-Traffic-Light-Detection
 
 # prep kitti data
 #cd data
