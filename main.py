@@ -6,9 +6,7 @@ import glob
 import warnings
 import sys
 import os
-#from video import Video
 from distutils.version import LooseVersion
-import project_tests as tests
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -47,7 +45,6 @@ def load_vgg(sess, vgg_path):
     vgg_layer7_out_tensor = sess.graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
 
     return vgg_input_tensor, vgg_keep_prob_tensor, vgg_layer3_out_tensor, vgg_layer4_out_tensor, vgg_layer7_out_tensor
-tests.test_load_vgg(load_vgg, tf)
 
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
@@ -134,7 +131,6 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     return conv_transposed_layer_3
 
-tests.test_layers(layers)
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
@@ -153,7 +149,6 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
 
     return logits, train_op, cross_entropy_loss
 
-tests.test_optimize(optimize)
 
 def get_iou(logits, image_shape, batch_size):
     unstacked_softmax_logits = tf.unstack(tf.nn.softmax(logits), num=2, axis=1, name='unstack_logits')
@@ -217,9 +212,11 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         saver = tf.train.Saver()
         saver.save(sess, "model")
 
-tests.test_train_nn(train_nn)
 
 def run():
+
+    print("Nothing happening so far. Exiting.")
+    return
 
     tests_only = os.getenv("TESTS_ONLY", False)
     if tests_only:
