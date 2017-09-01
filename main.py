@@ -58,10 +58,11 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
 
     # fully connected
-    fully_connected_layer = tf.contrib.layers.fully_connected(
+    fully_connected_layer = tf.layers.dense(
         vgg_layer7_out,
         num_classes,
-        activation_fn=tf.nn.relu
+        activation=tf.nn.relu,
+        name="dense_out"
     )
 
     return fully_connected_layer
@@ -77,6 +78,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     :return: Tuple of (logits, train_op, cross_entropy_loss)
     """
 
+    #nn_last_layer = tf.reshape(nn_last_layer, (-1, num_classes))
     cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=nn_last_layer, labels=correct_label))
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(cross_entropy_loss)
