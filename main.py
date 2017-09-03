@@ -1,5 +1,6 @@
 import os.path
 import tensorflow as tf
+from tensorflow.contrib.layers import flatten
 import numpy as np
 import helper
 import glob
@@ -46,7 +47,6 @@ def load_vgg(sess, vgg_path):
 
     return vgg_input_tensor, vgg_keep_prob_tensor, vgg_layer3_out_tensor, vgg_layer4_out_tensor, vgg_layer7_out_tensor
 
-
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     Create the layers for a fully convolutional network.  Build skip-layers using the vgg layers.
@@ -57,15 +57,44 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
 
+    print("vgg3_shape: " + str(vgg_layer3_out.get_shape())) # (?, 56, 56, 256)
+    print("vgg4_shape: " + str(vgg_layer4_out.get_shape())) # (?, 28, 28, 512) (?, 14, 14, 512) (?, 7, 7, 512)
+    print("vgg7_shape: " + str(vgg_layer7_out.get_shape())) # (?, 1, 1, 4096)
+
+    vgg_layer3_num_outputs = vgg_layer3_out.get_shape()[3]
+    vgg_layer4_num_outputs = vgg_layer4_out.get_shape()[3]
+    vgg_layer7_num_outputs = vgg_layer7_out.get_shape()[3]
+
+    conv_1x1_layer = tf.layers.conv2d(vgg_layer7_out,
+                                      vgg_layer7_num_outputs,
+                                      kernel_size=1,
+                                      strides=(5, 18),
+                                      name="conv_1x1_layer")
+
+    """
+    fully_connected_layer = tf.contrib.layers.fully_connected(
+        flatten(vgg_layer7_out), # [10, 368640] = 4096*90! wieso, oida?
+        num_classes
+    )
+    """
+
     # fully connected
     fully_connected_layer = tf.layers.dense(
-        vgg_layer7_out,
+        conv_1x1_layer, #14400 #3600 #900 too much: x90
         num_classes,
-        activation=tf.nn.relu,
         name="dense_out"
     )
 
-    return fully_connected_layer
+
+
+
+
+    # layer 3 [array([ 10,  20,  72, 256], dtype=int32)]
+                                       # layer 4 [array([ 10,  10,  36, 512], dtype=int32)]
+    shapeOp = tf.shape(conv_1x1_layer) #layer 7: [array([  10,    5,   18, 4096], dtype=int32)]
+
+    #return shapeOp, flatten(vgg_layer7_out)
+    return shapeOp, fully_connected_layer
 
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
@@ -86,7 +115,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     return nn_last_layer, train_op, cross_entropy_loss
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
-             correct_label, keep_prob, learning_rate, logits):
+             correct_label, keep_prob, learning_rate, logits, shapeOp):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -116,6 +145,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             # Training
             _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={input_image: sample_batch, correct_label: label_batch, keep_prob: 0.8})
 
+            #print(shape)
             print("=", end="")
             sys.stdout.flush()
         print ("| Loss:", loss)
@@ -138,7 +168,7 @@ def run():
     data_dir = './data'
     runs_dir = './runs'
     epochs = 20
-    batch_size = 5
+    batch_size = 10
     learning_rate = 0.0005
 
     # Download pretrained vgg model
@@ -158,7 +188,7 @@ def run():
         correct_label = tf.placeholder(tf.int32, (None, num_classes))
 
         # add layers
-        nn_last_layer = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
+        shapeOp, nn_last_layer = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
 
         # define optimizer
         logits, train_op, cross_entropy_loss = optimize(nn_last_layer, correct_label, learning_rate, num_classes)
@@ -170,7 +200,7 @@ def run():
 
         else:
             # Train NN using the train_nn function
-            train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, vgg_input, correct_label, vgg_keep_prob, learning_rate, logits)
+            train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, vgg_input, correct_label, vgg_keep_prob, learning_rate, logits, shapeOp)
 
         # TODO Save inference data using helper.save_inference_samples
         # helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, vgg_keep_prob, vgg_input)
